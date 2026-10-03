@@ -1,0 +1,23 @@
+{
+  "name": "orangehrm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ACLDise/OrangeHRM.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ACLDise/OrangeHRM/issues"
+  },
+  "homepage": "https://github.com/ACLDise/OrangeHRM#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "playwright-bdd": "^9.2.1"
+  }
+}
