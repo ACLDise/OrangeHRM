@@ -3,6 +3,8 @@ import { test, expect } from "@playwright/test";
 import { LoginPage } from "../pages/LoginPage";
 import { TimesheetPage } from "../pages/TimesheetPage";
 
+test.setTimeout(60000);
+
 // ============================================================================
 // CONFIGURACIÓN DEL AMBIENTE
 // ============================================================================

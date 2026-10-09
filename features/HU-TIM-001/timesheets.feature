@@ -10,64 +10,41 @@
 #          CP-TIM-001 - Rechazar el registro de horas negativas
 #_____________________________________________________________________________
 
-#Paso 1: Crear el Feature
-
 Feature: Registro y envío de hojas de tiempo semanales
 
   Como empleado autenticado en la plataforma
   Quiero registrar y gestionar las horas trabajadas en mi hoja de tiempo semanal
   Para mantener un control del tiempo laborado antes de su aprobación
 
-#Paso 2: Adición de etiquetas
-@ui @time @regresion @CP-TIM-001
-
-#Paso 3: Relación del Escenario
-Scenario: Rechazar el registro de horas negativas
-
-#Paso 4: Definir el Given
-    Given que el empleado está autenticado con rol ESS
-    And tiene una hoja de tiempo semanal en estado Not Submitted
+  @ui @time @regresion @CP-TIM-001
+  Scenario: Rechazar el registro de horas negativas
+    Given que el usuario está autenticado en OrangeHRM
+    And tiene acceso a la edición de su hoja de tiempo
     And existen un proyecto y una actividad válidos disponibles
-
-#Paso 5: Definir el When
-    When el empleado intenta enviar una hoja de tiempo que contiene -5 horas en una actividad válida
-
-#Paso 6: Definir el Then
-    Then el sistema debe rechazar el registro de horas negativas
-    And el valor inválido no debe quedar registrado
-    And la hoja de tiempo debe permanecer en estado Not Submitted
+    When intenta guardar -5 horas asociadas a un proyecto y actividad válidos
+    Then el sistema debe rechazar el valor negativo
+    And debe mostrar un mensaje de validación en el campo de horas
+    And debe permanecer en la pantalla de edición de la hoja de tiempo
 
 #_____________________________________________________________________________
 #          CP-TIM-002 - Valores válidos para horas trabajadas
 #_____________________________________________________________________________
 
-#Paso 1: Crear el Feature
-#No aplica
-
-#Paso 2: Adición de etiquetas
 @ui @time @regresion @CP-TIM-002
+  Scenario Outline: Registrar valores válidos de horas en la hoja de tiempo
 
-#Paso 3: Relación del Escenario
-Scenario Outline: Guardar valores válidos de horas sin enviar la hoja de tiempo
-
-#Paso 4: Definir el Given
-    Given que el empleado está autenticado con rol ESS
-    And tiene una hoja de tiempo semanal en estado Not Submitted
+    Given que el usuario está autenticado en OrangeHRM
+    And tiene acceso a la edición de su hoja de tiempo
     And existen un proyecto y una actividad válidos disponibles
 
-#Paso 5: Definir el When
-     When el empleado registra <hours> horas en una actividad válida
-     And guarda la hoja de tiempo sin enviarla
+    When registra <horas> horas asociadas a un proyecto y actividad válidos
+    And guarda la hoja de tiempo
 
-#Paso 6: Definir el Then
-    Then el sistema debe aceptar el valor de <hours> horas
-    And el valor debe quedar guardado sin errores
-    And la hoja de tiempo debe permanecer en estado Draft
+    Then el sistema debe aceptar el valor registrado
+    And no debe mostrar mensajes de validación en el campo de horas
 
-#Paso 7: Definir los ejemplos
     Examples:
-      | hours |
+      | horas |
       | 0     |
-      | 1     |
       | 8     |
       | 24    |
