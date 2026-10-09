@@ -25,20 +25,36 @@ export class TimesheetPage {
   // LOCATORS DE LA TIMESHEET
   // ===========================================================================
 
-  // Campo autocomplete utilizado para seleccionar un proyecto.
+  // Campo Project de la primera fila editable.
   private readonly projectInput: Locator;
 
-  // Campo desplegable utilizado para seleccionar una actividad.
+  // Campo Activity de la primera fila editable.
   private readonly activityDropdown: Locator;
 
-  // Campos destinados al registro de horas por día.
+  // Campos de horas disponibles en la Timesheet.
   private readonly hourInputs: Locator;
 
-  // Botón utilizado para guardar los cambios realizados.
+  // Botón utilizado para agregar una nueva fila.
+  private readonly addRowButton: Locator;
+
+  // Filas editables de la Timesheet.
+  private readonly timesheetRows: Locator;
+
+  // Botón utilizado para guardar los cambios.
   private readonly saveButton: Locator;
 
-  // Mensaje mostrado cuando el valor ingresado en horas no es válido.
+  // ===========================================================================
+  // LOCATORS DE VALIDACIÓN
+  // ===========================================================================
+
+  // Mensaje mostrado cuando el valor de horas no es válido.
   private readonly hoursValidationMessage: Locator;
+
+  // Mensaje mostrado cuando Project es obligatorio.
+  private readonly projectValidationMessage: Locator;
+
+  // Mensaje mostrado cuando Activity es obligatoria.
+  private readonly activityValidationMessage: Locator;
 
   // ===========================================================================
   // CONSTRUCTOR
@@ -66,29 +82,56 @@ export class TimesheetPage {
     });
 
     // -------------------------------------------------------------------------
-    // Elementos de edición de la Timesheet
+    // Elementos de edición
     // -------------------------------------------------------------------------
 
-    this.projectInput = page.getByPlaceholder("Type for hints...");
+    // Primera coincidencia del campo Project.
+    // Los casos CP-TIM-001, CP-TIM-002 y CP-TIM-003 trabajan
+    // principalmente sobre la primera fila.
+    this.projectInput = page.getByPlaceholder("Type for hints...").first();
 
-    // Se localiza el componente desplegable utilizado para Activity.
+    // Primera coincidencia del desplegable Activity.
     this.activityDropdown = page.locator(".oxd-select-text-input").first();
 
-    // Se localizan únicamente los inputs correspondientes a las horas
-    // dentro de la tabla de edición de la Timesheet.
+    // Campos de horas disponibles dentro de la tabla.
     this.hourInputs = page.locator(
       ".orangehrm-timesheet-table-body input.oxd-input",
     );
+
+    // Botón Add Row identificado mediante el icono "+".
+    this.addRowButton = page.locator("button.orangehrm-timesheet-icon").filter({
+      has: page.locator("i.bi-plus"),
+    });
+
+    // Se consideran únicamente las filas que contienen un campo Project.
+    // Esto permite excluir elementos estructurales de la tabla y trabajar
+    // solamente con filas editables.
+    this.timesheetRows = page
+      .locator(".orangehrm-timesheet-table-body-row")
+      .filter({
+        has: page.locator('input[placeholder="Type for hints..."]'),
+      });
 
     this.saveButton = page.getByRole("button", {
       name: "Save",
     });
 
-    // Mensaje de validación asociado a valores de horas no permitidos.
+    // -------------------------------------------------------------------------
+    // Mensajes de validación
+    // -------------------------------------------------------------------------
+
     this.hoursValidationMessage = page.getByText(
       "Should Be Less Than 24 and in HH:MM or Decimal Format",
       { exact: true },
     );
+
+    this.projectValidationMessage = page.getByText("Select a Project", {
+      exact: true,
+    });
+
+    this.activityValidationMessage = page.getByText("Select an Activity", {
+      exact: true,
+    });
   }
 
   // ===========================================================================
@@ -106,14 +149,14 @@ export class TimesheetPage {
   }
 
   // ===========================================================================
-  // ACCIONES SOBRE LA TIMESHEET
+  // ACCIONES SOBRE LA PRIMERA FILA
   // ===========================================================================
 
   /**
-   * Busca y selecciona un proyecto disponible en el autocomplete.
+   * Busca y selecciona un proyecto en la primera fila editable.
    */
   async selectProject(projectName: string): Promise<void> {
-    // Consultamos el valor actual del campo Project.
+    // Consultamos el proyecto actualmente seleccionado.
     const currentProject = await this.projectInput.inputValue();
 
     // Si el proyecto requerido ya está seleccionado,
@@ -122,47 +165,37 @@ export class TimesheetPage {
       return;
     }
 
-    // Activamos el campo Project.
     await this.projectInput.click();
-
-    // Escribimos el proyecto para iniciar la búsqueda.
     await this.projectInput.fill(projectName);
 
-    // Localizamos una opción del autocomplete que contenga
-    // el nombre del proyecto solicitado.
+    // OrangeHRM genera dinámicamente las opciones del autocomplete.
     const projectOption = this.page
       .locator(".oxd-autocomplete-option")
       .filter({ hasText: projectName })
       .first();
 
-    // OrangeHRM puede tardar algunos segundos en cargar
-    // los resultados disponibles.
     await projectOption.waitFor({
       state: "visible",
       timeout: 15000,
     });
 
-    // Seleccionamos el proyecto encontrado.
     await projectOption.click();
   }
 
   /**
-   * Selecciona una actividad asociada al proyecto.
+   * Selecciona una actividad en la primera fila editable.
    */
   async selectActivity(activityName: string): Promise<void> {
-    // Consultamos la actividad actualmente seleccionada.
     const currentActivity = (await this.activityDropdown.textContent()) ?? "";
 
-    // Si la actividad requerida ya está seleccionada,
-    // no es necesario abrir nuevamente el desplegable.
+    // Evitamos seleccionar nuevamente una actividad
+    // que ya se encuentre diligenciada.
     if (currentActivity.includes(activityName)) {
       return;
     }
 
-    // Abrimos el listado de actividades.
     await this.activityDropdown.click();
 
-    // Seleccionamos la actividad solicitada.
     const activityOption = this.page.getByText(activityName, {
       exact: true,
     });
@@ -176,7 +209,7 @@ export class TimesheetPage {
   }
 
   /**
-   * Ingresa un valor de horas en el día indicado.
+   * Ingresa un valor de horas en el día indicado de la primera fila.
    *
    * dayIndex:
    * 0 = lunes
@@ -191,6 +224,10 @@ export class TimesheetPage {
     await this.getHoursInput(dayIndex).fill(hours);
   }
 
+  // ===========================================================================
+  // ACCIONES GENERALES
+  // ===========================================================================
+
   /**
    * Intenta guardar los datos registrados en la hoja de tiempo.
    */
@@ -198,21 +235,156 @@ export class TimesheetPage {
     await this.saveButton.click();
   }
 
+  /**
+   * Agrega una nueva fila vacía y espera hasta que OrangeHRM
+   * la incorpore a la tabla.
+   */
+  async addNewRow(): Promise<void> {
+    // Número de filas existentes antes de agregar una nueva.
+    const previousRowCount = await this.timesheetRows.count();
+
+    // Agregamos una nueva fila.
+    await this.addRowButton.click();
+
+    // Esperamos específicamente a que la nueva fila sea visible.
+    await this.timesheetRows.nth(previousRowCount).waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+  }
+
   // ===========================================================================
-  // ELEMENTOS PARA VALIDACIÓN
+  // ACCIONES SOBRE LA ÚLTIMA FILA AGREGADA
   // ===========================================================================
 
   /**
-   * Retorna el campo de horas correspondiente al día solicitado.
+   * Selecciona un proyecto en la última fila agregada.
+   */
+  async selectProjectInLastRow(projectName: string): Promise<void> {
+    // Localizamos Project únicamente dentro de la última fila.
+    const projectInput =
+      this.getLastRow().getByPlaceholder("Type for hints...");
+
+    await projectInput.click();
+    await projectInput.fill(projectName);
+
+    const projectOption = this.page
+      .locator(".oxd-autocomplete-option")
+      .filter({ hasText: projectName })
+      .first();
+
+    await projectOption.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
+    await projectOption.click();
+  }
+
+  /**
+   * Selecciona una actividad en la última fila agregada.
+   */
+  async selectActivityInLastRow(activityName: string): Promise<void> {
+    // Localizamos Activity únicamente dentro de la última fila.
+    const activityDropdown = this.getLastRow().locator(
+      ".oxd-select-text-input",
+    );
+
+    await activityDropdown.click();
+
+    const activityOption = this.page.getByText(activityName, {
+      exact: true,
+    });
+
+    await activityOption.waitFor({
+      state: "visible",
+      timeout: 10000,
+    });
+
+    await activityOption.click();
+  }
+
+  /**
+   * Ingresa horas en un día específico de la última fila agregada.
+   *
+   * dayIndex:
+   * 0 = lunes
+   * 1 = martes
+   * 2 = miércoles
+   * 3 = jueves
+   * 4 = viernes
+   * 5 = sábado
+   * 6 = domingo
+   */
+  async enterHoursInLastRow(dayIndex: number, hours: string): Promise<void> {
+    await this.getHoursInputInLastRow(dayIndex).fill(hours);
+  }
+
+  // ===========================================================================
+  // ELEMENTOS DE LA TIMESHEET
+  // ===========================================================================
+
+  /**
+   * Retorna la última fila editable disponible.
+   */
+  getLastRow(): Locator {
+    return this.timesheetRows.last();
+  }
+
+  /**
+   * Retorna el campo de horas correspondiente al día solicitado
+   * dentro de la primera fila.
    */
   getHoursInput(dayIndex: number): Locator {
     return this.hourInputs.nth(dayIndex);
   }
 
   /**
+   * Retorna el campo de horas correspondiente al día solicitado
+   * dentro de la última fila agregada.
+   */
+  getHoursInputInLastRow(dayIndex: number): Locator {
+    return this.getLastRow().locator("input.oxd-input").nth(dayIndex);
+  }
+
+  // ===========================================================================
+  // ELEMENTOS PARA VALIDACIÓN
+  // ===========================================================================
+
+  /**
    * Retorna el mensaje de validación asociado al campo de horas.
    */
   getHoursValidationMessage(): Locator {
     return this.hoursValidationMessage;
+  }
+
+  /**
+   * Retorna el mensaje de validación asociado a Project.
+   */
+  getProjectValidationMessage(): Locator {
+    return this.projectValidationMessage;
+  }
+
+  /**
+   * Retorna el mensaje de validación asociado a Activity.
+   */
+  getActivityValidationMessage(): Locator {
+    return this.activityValidationMessage;
+  }
+
+  /**
+   * Retorna el mensaje de validación de Project correspondiente
+   * específicamente a la última fila agregada.
+   */
+  getProjectValidationMessageInLastRow(): Locator {
+    return this.getLastRow().getByText("Select a Project", { exact: true });
+  }
+
+  /**
+   * Retorna el mensaje de validación de Activity correspondiente
+   * específicamente a la última fila agregada.
+   */
+  getActivityValidationMessageInLastRow(): Locator {
+    return this.getLastRow().getByText("Select an Activity", { exact: true });
   }
 }

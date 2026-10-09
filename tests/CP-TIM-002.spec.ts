@@ -29,7 +29,7 @@ const ACTIVITY = "Administration";
 //
 // Cada valor será ejecutado como una prueba independiente,
 // reproduciendo el comportamiento del Scenario Outline de Gherkin.
-const VALID_HOURS = ["0", "8", "24"];
+const VALID_HOURS = ["0", "8", "23"];
 
 // ============================================================================
 // CASO DE PRUEBA PARAMETRIZADO
@@ -75,13 +75,28 @@ for (const hours of VALID_HOURS) {
     await timesheetPage.selectProject(PROJECT);
     await timesheetPage.selectActivity(ACTIVITY);
 
-    // Ingresamos el valor negativo en el primer día de la semana.
+    // Ingresamos el valor válido correspondiente a esta ejecución.
     await timesheetPage.enterHours(0, hours);
 
-    // Confirmamos que el dato de prueba haya sido ingresado en el campo esperado.
+    // Confirmamos que el valor haya sido ingresado en el campo esperado.
     await expect(timesheetPage.getHoursInput(0)).toHaveValue(hours);
 
-    // Intentamos guardar la hoja de tiempo con el valor inválido.
+    // ------------------------------------------------------------------------
+    // 5. EJECUCIÓN DE LA ACCIÓN A VALIDAR
+    // ------------------------------------------------------------------------
+
+    // Guardamos la hoja de tiempo con el valor válido.
     await timesheetPage.saveTimesheet();
+
+    // ------------------------------------------------------------------------
+    // 6. VALIDACIONES DEL RESULTADO ESPERADO
+    // ------------------------------------------------------------------------
+
+    // Un valor válido no debe generar el mensaje de validación de horas.
+    await expect(timesheetPage.getHoursValidationMessage()).toBeHidden();
+
+    // El guardado exitoso debe abandonar la pantalla de edición
+    // y regresar a la vista de My Timesheet.
+    await expect(page).toHaveURL(/viewMyTimesheet/);
   });
 }
