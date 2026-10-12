@@ -100,6 +100,20 @@ Given(
   },
 );
 
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: And accede a la hoja de tiempo del empleado indicado
+ *----------------------------------------------------------------------------------------------*/
+Given(
+  'accede a la hoja de tiempo del empleado "{string}"',
+  async ({ page }, employeeName: string) => {
+    // Inicializamos el Page Object correspondiente a Timesheets.
+    const timesheetPage = new TimesheetPage(page);
+
+    // Accedemos a la hoja de tiempo del empleado indicado.
+    await timesheetPage.openEmployeeTimesheet(employeeName);
+  },
+);
+
 // ============================================================================
 // WHEN - ACCIONES
 // ============================================================================
@@ -200,17 +214,6 @@ When("registra 8 horas sin seleccionar una actividad", async ({ page }) => {
 });
 
 /**----------------------------------------------------------------------------------------------
- * Implementa el paso: And envía la hoja de tiempo para aprobación
- *----------------------------------------------------------------------------------------------*/
-When("envía la hoja de tiempo para aprobación", async () => {
-  // Este paso quedará conectado posteriormente con la acción
-  // correspondiente de Submit dentro de TimesheetPage.
-  throw new Error(
-    "Step pendiente de conectar con la acción Submit de TimesheetPage",
-  );
-});
-
-/**----------------------------------------------------------------------------------------------
  * Implementa el paso: When aprueba la hoja de tiempo
  *----------------------------------------------------------------------------------------------*/
 When("aprueba la hoja de tiempo", async () => {
@@ -219,6 +222,17 @@ When("aprueba la hoja de tiempo", async () => {
   throw new Error(
     "Step pendiente de conectar con la acción Approve de TimesheetPage",
   );
+});
+
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: And envía la hoja de tiempo para aprobación
+ *----------------------------------------------------------------------------------------------*/
+When("envía la hoja de tiempo para aprobación", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Enviamos la hoja de tiempo registrada para aprobación.
+  await timesheetPage.submitTimesheet();
 });
 
 // ============================================================================
@@ -336,23 +350,28 @@ Then("debe indicar que la actividad es obligatoria", async ({ page }) => {
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: Then el sistema debe aceptar el envío de la hoja de tiempo
  *----------------------------------------------------------------------------------------------*/
-Then("el sistema debe aceptar el envío de la hoja de tiempo", async () => {
-  // Esta validación quedará conectada posteriormente con el resultado
-  // observable generado después de ejecutar Submit en la Timesheet.
-  throw new Error(
-    "Step pendiente de conectar con la validación del envío de Timesheet",
-  );
-});
+Then(
+  "el sistema debe aceptar el envío de la hoja de tiempo",
+  async ({ page }) => {
+    // Inicializamos el Page Object correspondiente a Timesheets.
+    const timesheetPage = new TimesheetPage(page);
+
+    // Verificamos que el envío haya sido aceptado
+    // comprobando que la hoja de tiempo se encuentre en estado Submitted.
+    await expect(timesheetPage.getTimesheetStatus("Submitted")).toBeVisible();
+  },
+);
 
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: And la hoja de tiempo debe quedar en estado Submitted
  *----------------------------------------------------------------------------------------------*/
-Then("la hoja de tiempo debe quedar en estado Submitted", async () => {
-  // Esta validación quedará conectada posteriormente con el estado
-  // mostrado por OrangeHRM después de enviar la Timesheet.
-  throw new Error(
-    "Step pendiente de conectar con la validación del estado Submitted",
-  );
+Then("la hoja de tiempo debe quedar en estado Submitted", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Confirmamos que el estado final mostrado por OrangeHRM
+  // corresponde a Submitted.
+  await expect(timesheetPage.getTimesheetStatus("Submitted")).toBeVisible();
 });
 
 /**----------------------------------------------------------------------------------------------

@@ -155,6 +155,51 @@ export class TimesheetPage {
     await this.editButton.click();
   }
 
+  /**
+   * Navega hasta Employee Timesheets, busca al empleado indicado
+   * y abre su hoja de tiempo en modo edición.
+   */
+  async openEmployeeTimesheet(employeeName: string): Promise<void> {
+    // Ingresamos al módulo Time.
+    await this.timeMenu.click();
+
+    // Abrimos el menú Timesheets.
+    await this.timesheetsMenu.click();
+
+    // Seleccionamos la opción Employee Timesheets.
+    await this.page
+      .getByRole("menuitem", { name: "Employee Timesheets" })
+      .click();
+
+    // Localizamos el campo Employee Name.
+    const employeeInput = this.page.getByPlaceholder("Type for hints...");
+
+    // Ingresamos el nombre del empleado.
+    await employeeInput.fill(employeeName);
+
+    // Esperamos a que OrangeHRM muestre el empleado
+    // dentro de las opciones del autocomplete.
+    const employeeOption = this.page
+      .locator(".oxd-autocomplete-option")
+      .filter({ hasText: employeeName })
+      .first();
+
+    await employeeOption.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
+    // Seleccionamos el empleado encontrado.
+    await employeeOption.click();
+
+    // Consultamos la hoja de tiempo del empleado.
+    await this.page.getByRole("button", { name: "View" }).click();
+
+    // Abrimos la hoja de tiempo en modo edición
+    // para permitir el registro de Project, Activity y Hours.
+    await this.editButton.click();
+  }
+
   // ===========================================================================
   // ACCIONES SOBRE LA PRIMERA FILA
   // ===========================================================================
@@ -400,5 +445,15 @@ export class TimesheetPage {
    */
   getActivityValidationMessageInLastRow(): Locator {
     return this.getLastRow().getByText("Select an Activity", { exact: true });
+  }
+
+  /**
+   * Retorna el estado actual mostrado para la hoja de tiempo.
+   * Ejemplos: Submitted - Approved
+   */
+  getTimesheetStatus(status: string): Locator {
+    return this.page.getByText(`Status: ${status}`, {
+      exact: true,
+    });
   }
 }

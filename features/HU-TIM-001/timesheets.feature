@@ -107,7 +107,7 @@ Feature: Registro y envío de hojas de tiempo semanales
   Scenario: Registrar y enviar correctamente una hoja de tiempo semanal
 
     Given que el usuario está autenticado en OrangeHRM
-    And tiene acceso a la edición de su hoja de tiempo
+    And accede a la hoja de tiempo del empleado "Timothy Lewis Amiano"
     And existen un proyecto y una actividad válidos disponibles
 
     When registra 8 horas asociadas a un proyecto y actividad válidos
