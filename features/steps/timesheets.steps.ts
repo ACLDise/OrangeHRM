@@ -104,7 +104,7 @@ Given(
  * Implementa el paso: And accede a la hoja de tiempo del empleado indicado
  *----------------------------------------------------------------------------------------------*/
 Given(
-  'accede a la hoja de tiempo del empleado "{string}"',
+  "accede a la hoja de tiempo del empleado {string}",
   async ({ page }, employeeName: string) => {
     // Inicializamos el Page Object correspondiente a Timesheets.
     const timesheetPage = new TimesheetPage(page);
@@ -113,6 +113,18 @@ Given(
     await timesheetPage.openEmployeeTimesheet(employeeName);
   },
 );
+
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: And prepara la hoja de tiempo para un nuevo envío
+ *----------------------------------------------------------------------------------------------*/
+Given("prepara la hoja de tiempo para un nuevo envío", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Preparamos la Timesheet para garantizar que pueda
+  // editarse y enviarse nuevamente.
+  await timesheetPage.prepareTimesheetForSubmission();
+});
 
 // ============================================================================
 // WHEN - ACCIONES

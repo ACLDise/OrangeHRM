@@ -157,7 +157,7 @@ export class TimesheetPage {
 
   /**
    * Navega hasta Employee Timesheets, busca al empleado indicado
-   * y abre su hoja de tiempo en modo edición.
+   * y consulta su hoja de tiempo.
    */
   async openEmployeeTimesheet(employeeName: string): Promise<void> {
     // Ingresamos al módulo Time.
@@ -193,11 +193,111 @@ export class TimesheetPage {
     await employeeOption.click();
 
     // Consultamos la hoja de tiempo del empleado.
-    await this.page.getByRole("button", { name: "View" }).click();
+    // Limitamos la búsqueda al formulario de Employee Timesheets
+    // para evitar confundir este botón View con los botones de la tabla.
+    await this.page
+      .locator("form")
+      .getByRole("button", { name: "View", exact: true })
+      .click();
+  }
 
-    // Abrimos la hoja de tiempo en modo edición
-    // para permitir el registro de Project, Activity y Hours.
+  /**
+   * Prepara la hoja de tiempo para ejecutar un nuevo flujo de envío.
+   *
+   * El objetivo es garantizar que la Timesheet quede en estado Rejected,
+   * ya que desde este estado OrangeHRM permite editar la información
+   * y posteriormente ejecutar nuevamente la acción Submit.
+   */
+  async prepareTimesheetForSubmission(): Promise<void> {
+    // Esperamos a que OrangeHRM muestre alguno de los estados
+    // asociados a la hoja de tiempo consultada.
+    const statusLabel = this.page.getByText(/^Status:/).first();
+
+    await statusLabel.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
+    // Consultamos el estado actual de la Timesheet.
+    let currentStatus = (await statusLabel.textContent())?.trim() ?? "";
+
+    // -------------------------------------------------------------------------
+    // ESTADO APPROVED
+    // -------------------------------------------------------------------------
+    //
+    // Una Timesheet aprobada no puede enviarse nuevamente directamente.
+    // Primero ejecutamos Reset, lo que devuelve la hoja a Submitted.
+    //
+    if (currentStatus === "Status: Approved") {
+      const resetButton = this.page.getByRole("button", {
+        name: "Reset",
+        exact: true,
+      });
+
+      await resetButton.waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      await resetButton.click();
+
+      // Esperamos explícitamente la transición:
+      // Approved → Submitted.
+      await this.getTimesheetStatus("Submitted").waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      currentStatus = "Status: Submitted";
+    }
+
+    // -------------------------------------------------------------------------
+    // ESTADO SUBMITTED
+    // -------------------------------------------------------------------------
+    //
+    // Una Timesheet Submitted debe rechazarse para permitir
+    // nuevamente el flujo de edición y envío.
+    //
+    if (currentStatus === "Status: Submitted") {
+      const rejectButton = this.page.getByRole("button", {
+        name: "Reject",
+        exact: true,
+      });
+
+      await rejectButton.waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      await rejectButton.click();
+
+      // Esperamos explícitamente la transición:
+      // Submitted → Rejected.
+      await this.getTimesheetStatus("Rejected").waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // ESTADO REJECTED
+    // -------------------------------------------------------------------------
+    //
+    // Una vez garantizado el estado Rejected,
+    // abrimos la Timesheet en modo edición.
+    //
+    await this.editButton.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
     await this.editButton.click();
+
+    // Confirmamos que OrangeHRM haya ingresado realmente
+    // a la pantalla de edición antes de continuar.
+    await this.page.waitForURL(/editTimesheet/, {
+      timeout: 15000,
+    });
   }
 
   // ===========================================================================

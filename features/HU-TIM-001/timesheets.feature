@@ -106,9 +106,10 @@ Feature: Registro y envío de hojas de tiempo semanales
   @ui @time @regresion @CP-TIM-007
   Scenario: Registrar y enviar correctamente una hoja de tiempo semanal
 
-    Given que el usuario está autenticado en OrangeHRM
-    And accede a la hoja de tiempo del empleado "Timothy Lewis Amiano"
-    And existen un proyecto y una actividad válidos disponibles
+Given que el usuario está autenticado en OrangeHRM
+And accede a la hoja de tiempo del empleado "Timothy Lewis Amiano"
+And prepara la hoja de tiempo para un nuevo envío
+And existen un proyecto y una actividad válidos disponibles
 
     When registra 8 horas asociadas a un proyecto y actividad válidos
     And guarda la hoja de tiempo
