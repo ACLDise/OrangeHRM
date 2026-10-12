@@ -98,3 +98,37 @@ Feature: Registro y envío de hojas de tiempo semanales
     Then el sistema debe impedir el guardado
     And debe indicar que la actividad es obligatoria
     And debe permanecer en la pantalla de edición de la hoja de tiempo
+
+#_____________________________________________________________________________
+#            CP-TIM-007 - Registrar y enviar hoja de tiempo válida
+#_____________________________________________________________________________
+
+  @ui @time @regresion @CP-TIM-007
+  Scenario: Registrar y enviar correctamente una hoja de tiempo semanal
+
+    Given que el usuario está autenticado en OrangeHRM
+    And tiene acceso a la edición de su hoja de tiempo
+    And existen un proyecto y una actividad válidos disponibles
+
+    When registra 8 horas asociadas a un proyecto y actividad válidos
+    And guarda la hoja de tiempo
+    And envía la hoja de tiempo para aprobación
+
+    Then el sistema debe aceptar el envío de la hoja de tiempo
+    And la hoja de tiempo debe quedar en estado Submitted
+
+#_____________________________________________________________________________
+#             CP-TIM-008 - Aprobar una hoja de tiempo enviada
+#_____________________________________________________________________________
+
+  @ui @time @regresion @CP-TIM-008
+  Scenario: Aprobar correctamente una hoja de tiempo enviada
+
+    Given que el usuario está autenticado en OrangeHRM
+    And existe una hoja de tiempo en estado Submitted disponible para aprobación
+
+    When aprueba la hoja de tiempo
+
+    Then el sistema debe aceptar la aprobación
+    And la hoja de tiempo debe quedar en estado Approved
+    And no debe permitir modificar las horas registradas
