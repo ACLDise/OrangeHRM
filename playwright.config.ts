@@ -17,6 +17,12 @@ import { defineBddProject } from "playwright-bdd";
 export default defineConfig({
   testDir: "./tests",
   /* Run tests in files in parallel */
+
+  // Tiempo máximo permitido para la ejecución de cada prueba.
+  // Se amplía debido a los tiempos de respuesta variables
+  // del ambiente demo de OrangeHRM.
+  timeout: 60000,
+
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
