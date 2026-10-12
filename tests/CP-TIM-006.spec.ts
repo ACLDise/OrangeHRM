@@ -7,10 +7,6 @@ import { TimesheetPage } from "../pages/TimesheetPage";
 // CONFIGURACIÓN GENERAL
 // ============================================================================
 
-// Tiempo máximo permitido para cada escenario.
-// El ambiente demo de OrangeHRM puede presentar tiempos de respuesta variables.
-test.setTimeout(60000);
-
 // URL de acceso al ambiente demo de OrangeHRM.
 const URL =
   "https://opensource-demo.orangehrmlive.com/web/index.php/auth/login";
