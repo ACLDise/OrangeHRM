@@ -43,6 +43,9 @@ export class TimesheetPage {
   // Botón utilizado para guardar los cambios.
   private readonly saveButton: Locator;
 
+  // Botón utilizado para enviar la hoja de tiempo para aprobación.
+  private readonly submitButton: Locator;
+
   // ===========================================================================
   // LOCATORS DE VALIDACIÓN
   // ===========================================================================
@@ -114,6 +117,10 @@ export class TimesheetPage {
 
     this.saveButton = page.getByRole("button", {
       name: "Save",
+    });
+
+    this.submitButton = page.getByRole("button", {
+      name: "Submit",
     });
 
     // -------------------------------------------------------------------------
@@ -233,6 +240,13 @@ export class TimesheetPage {
    */
   async saveTimesheet(): Promise<void> {
     await this.saveButton.click();
+  }
+
+  /**
+   * Envía la hoja de tiempo registrada para aprobación.
+   */
+  async submitTimesheet(): Promise<void> {
+    await this.submitButton.click();
   }
 
   /**
