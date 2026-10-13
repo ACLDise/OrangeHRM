@@ -126,6 +126,18 @@ Given("prepara la hoja de tiempo para un nuevo envío", async ({ page }) => {
   await timesheetPage.prepareTimesheetForSubmission();
 });
 
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: And prepara la hoja de tiempo para aprobación
+ *----------------------------------------------------------------------------------------------*/
+Given("prepara la hoja de tiempo para aprobación", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Preparamos la Timesheet para garantizar que se encuentre
+  // en estado Submitted antes de ejecutar la aprobación.
+  await timesheetPage.prepareTimesheetForApproval();
+});
+
 // ============================================================================
 // WHEN - ACCIONES
 // ============================================================================
@@ -228,12 +240,13 @@ When("registra 8 horas sin seleccionar una actividad", async ({ page }) => {
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: When aprueba la hoja de tiempo
  *----------------------------------------------------------------------------------------------*/
-When("aprueba la hoja de tiempo", async () => {
-  // Esta acción quedará conectada posteriormente con la operación
-  // de aprobación de una Timesheet en estado Submitted.
-  throw new Error(
-    "Step pendiente de conectar con la acción Approve de TimesheetPage",
-  );
+When("aprueba la hoja de tiempo", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Ejecutamos la aprobación de la hoja de tiempo
+  // que se encuentra previamente en estado Submitted.
+  await timesheetPage.approveTimesheet();
 });
 
 /**----------------------------------------------------------------------------------------------
@@ -246,6 +259,21 @@ When("envía la hoja de tiempo para aprobación", async ({ page }) => {
   // Enviamos la hoja de tiempo registrada para aprobación.
   await timesheetPage.submitTimesheet();
 });
+
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: When registra el comentario indicado en Timesheet Action
+ *----------------------------------------------------------------------------------------------*/
+When(
+  "registra el comentario {string} en Timesheet Action",
+  async ({ page }, comment: string) => {
+    // Inicializamos el Page Object correspondiente a Timesheets.
+    const timesheetPage = new TimesheetPage(page);
+
+    // Registramos el comentario asociado a la acción
+    // que se ejecutará sobre la hoja de tiempo.
+    await timesheetPage.enterTimesheetActionComment(comment);
+  },
+);
 
 // ============================================================================
 // THEN - VALIDACIONES
@@ -389,33 +417,52 @@ Then("la hoja de tiempo debe quedar en estado Submitted", async ({ page }) => {
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: Then el sistema debe aceptar la aprobación
  *----------------------------------------------------------------------------------------------*/
-Then("el sistema debe aceptar la aprobación", async () => {
-  // Esta validación quedará conectada posteriormente con el resultado
-  // observable generado después de aprobar la Timesheet.
-  throw new Error(
-    "Step pendiente de conectar con la validación de aprobación de Timesheet",
-  );
+Then("el sistema debe aceptar la aprobación", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Verificamos que OrangeHRM haya procesado correctamente
+  // la aprobación mostrando el estado Approved.
+  await expect(timesheetPage.getTimesheetStatus("Approved")).toBeVisible();
 });
 
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: And la hoja de tiempo debe quedar en estado Approved
  *----------------------------------------------------------------------------------------------*/
-Then("la hoja de tiempo debe quedar en estado Approved", async () => {
-  // Esta validación quedará conectada posteriormente con el estado
-  // mostrado por OrangeHRM después de aprobar la Timesheet.
-  throw new Error(
-    "Step pendiente de conectar con la validación del estado Approved",
-  );
+Then("la hoja de tiempo debe quedar en estado Approved", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Confirmamos que el estado final mostrado por OrangeHRM
+  // corresponde a Approved.
+  await expect(timesheetPage.getTimesheetStatus("Approved")).toBeVisible();
 });
 
 /**----------------------------------------------------------------------------------------------
  * Implementa el paso: And no debe permitir modificar las horas registradas
  *----------------------------------------------------------------------------------------------*/
-Then("no debe permitir modificar las horas registradas", async () => {
-  // Esta validación quedará conectada posteriormente con la comprobación
-  // de que los campos de horas no puedan ser editados después de aprobar
-  // la Timesheet.
-  throw new Error(
-    "Step pendiente de conectar con la validación de bloqueo de horas",
-  );
+Then("no debe permitir modificar las horas registradas", async ({ page }) => {
+  // Inicializamos el Page Object correspondiente a Timesheets.
+  const timesheetPage = new TimesheetPage(page);
+
+  // Verificamos que, después de aprobar la Timesheet,
+  // OrangeHRM ya no permita acceder al modo de edición.
+  await expect(timesheetPage.getEditButton()).toBeHidden();
 });
+
+/**----------------------------------------------------------------------------------------------
+ * Implementa el paso: And debe registrar la acción Approved en el historial de la hoja de tiempo
+ *----------------------------------------------------------------------------------------------*/
+Then(
+  "debe registrar la acción Approved en el historial de la hoja de tiempo",
+  async ({ page }) => {
+    // Inicializamos el Page Object correspondiente a Timesheets.
+    const timesheetPage = new TimesheetPage(page);
+
+    // Verificamos que la acción Approved haya sido registrada
+    // dentro del historial de acciones de la hoja de tiempo.
+    await expect(
+      timesheetPage.getTimesheetHistoryAction("Approved"),
+    ).toBeVisible();
+  },
+);

@@ -72,7 +72,9 @@ test.describe
     await loginPage.login(USERNAME, PASSWORD);
 
     // Confirmamos que el inicio de sesión fue exitoso.
-    await expect(page).toHaveURL(/dashboard/);
+    await expect(page).toHaveURL(/dashboard/, {
+      timeout: 20000,
+    });
 
     // ----------------------------------------------------------------------
     // 3. NAVEGACIÓN A LA HOJA DE TIEMPO
@@ -106,11 +108,17 @@ test.describe
     // 6. VALIDACIONES DEL RESULTADO ESPERADO
     // ----------------------------------------------------------------------
 
-    // Project debe ser identificado como campo obligatorio.
-    await expect(timesheetPage.getProjectValidationMessage()).toBeVisible();
+    // Project debe ser identificado como campo obligatorio
+    // específicamente en la nueva fila utilizada por el caso de prueba.
+    await expect(
+      timesheetPage.getProjectValidationMessageInLastRow(),
+    ).toBeVisible();
 
-    // Activity debe ser identificada como campo obligatorio.
-    await expect(timesheetPage.getActivityValidationMessage()).toBeVisible();
+    // Activity debe ser identificada como campo obligatorio
+    // específicamente en la nueva fila utilizada por el caso de prueba.
+    await expect(
+      timesheetPage.getActivityValidationMessageInLastRow(),
+    ).toBeVisible();
 
     // La información incompleta no debe permitir completar el guardado.
     await expect(page).toHaveURL(/editTimesheet/);
@@ -151,7 +159,9 @@ test.describe
     await loginPage.login(USERNAME, PASSWORD);
 
     // Confirmamos que el inicio de sesión fue exitoso.
-    await expect(page).toHaveURL(/dashboard/);
+    await expect(page).toHaveURL(/dashboard/, {
+      timeout: 20000,
+    });
 
     // ----------------------------------------------------------------------
     // 3. NAVEGACIÓN A LA HOJA DE TIEMPO
@@ -187,11 +197,17 @@ test.describe
     // 6. VALIDACIONES DEL RESULTADO ESPERADO
     // ----------------------------------------------------------------------
 
-    // Project contiene un valor válido, por lo que no debe mostrar error.
-    await expect(timesheetPage.getProjectValidationMessage()).toBeHidden();
+    // Project contiene un valor válido en la nueva fila,
+    // por lo que no debe mostrar error.
+    await expect(
+      timesheetPage.getProjectValidationMessageInLastRow(),
+    ).toBeHidden();
 
-    // Activity permanece vacía y debe mostrar su validación.
-    await expect(timesheetPage.getActivityValidationMessage()).toBeVisible();
+    // Activity permanece vacía en la nueva fila
+    // y debe mostrar su validación.
+    await expect(
+      timesheetPage.getActivityValidationMessageInLastRow(),
+    ).toBeVisible();
 
     // La fila incompleta no debe permitir completar el guardado.
     await expect(page).toHaveURL(/editTimesheet/);

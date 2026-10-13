@@ -122,14 +122,16 @@ And existen un proyecto y una actividad válidos disponibles
 #             CP-TIM-008 - Aprobar una hoja de tiempo enviada
 #_____________________________________________________________________________
 
-  @ui @time @regresion @CP-TIM-008
-  Scenario: Aprobar correctamente una hoja de tiempo enviada
+@ui @time @regresion @CP-TIM-008
+Scenario: Aprobar correctamente una hoja de tiempo enviada
+  Given que el usuario está autenticado en OrangeHRM
+  And accede a la hoja de tiempo del empleado "Timothy Lewis Amiano"
+  And prepara la hoja de tiempo para aprobación
 
-    Given que el usuario está autenticado en OrangeHRM
-    And existe una hoja de tiempo en estado Submitted disponible para aprobación
+  When registra el comentario "Prueba CP-TIM-008" en Timesheet Action
+  And aprueba la hoja de tiempo
 
-    When aprueba la hoja de tiempo
-
-    Then el sistema debe aceptar la aprobación
-    And la hoja de tiempo debe quedar en estado Approved
-    And no debe permitir modificar las horas registradas
+  Then el sistema debe aceptar la aprobación
+  And la hoja de tiempo debe quedar en estado Approved
+  And debe registrar la acción Approved en el historial de la hoja de tiempo
+  And no debe permitir modificar las horas registradas

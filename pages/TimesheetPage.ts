@@ -211,7 +211,12 @@ export class TimesheetPage {
   async prepareTimesheetForSubmission(): Promise<void> {
     // Esperamos a que OrangeHRM muestre alguno de los estados
     // asociados a la hoja de tiempo consultada.
-    const statusLabel = this.page.getByText(/^Status:/).first();
+    const statusLabel = this.page
+      .locator("p.oxd-text--subtitle-2")
+      .filter({
+        hasText: /^Status:\s*(Not Submitted|Submitted|Rejected|Approved)$/,
+      })
+      .first();
 
     await statusLabel.waitFor({
       state: "visible",
@@ -298,6 +303,100 @@ export class TimesheetPage {
     await this.page.waitForURL(/editTimesheet/, {
       timeout: 15000,
     });
+  }
+
+  /**
+   * Prepara la hoja de tiempo para ejecutar el flujo de aprobación.
+   *
+   * El objetivo es garantizar que la Timesheet se encuentre
+   * en estado Submitted antes de ejecutar la acción Approve.
+   */
+  async prepareTimesheetForApproval(): Promise<void> {
+    // Esperamos a que OrangeHRM muestre el estado actual
+    // de la hoja de tiempo consultada.
+    const statusLabel = this.page
+      .locator("p:visible")
+      .filter({
+        hasText: /^Status:/,
+      })
+      .first();
+
+    await statusLabel.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
+    // Consultamos el estado actual de la Timesheet.
+    let currentStatus = (await statusLabel.textContent())?.trim() ?? "";
+
+    // -------------------------------------------------------------------------
+    // ESTADO APPROVED
+    // -------------------------------------------------------------------------
+    //
+    // Si la hoja se encuentra aprobada, ejecutamos Reset.
+    // De acuerdo con el comportamiento observado en OrangeHRM,
+    // esta acción devuelve la hoja al estado Submitted.
+    //
+    if (currentStatus === "Status: Approved") {
+      const resetButton = this.page.getByRole("button", {
+        name: "Reset",
+        exact: true,
+      });
+
+      await resetButton.waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      await resetButton.click();
+
+      // Esperamos explícitamente la transición:
+      // Approved → Submitted.
+      await this.getTimesheetStatus("Submitted").waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      currentStatus = "Status: Submitted";
+    }
+
+    // -------------------------------------------------------------------------
+    // ESTADO REJECTED
+    // -------------------------------------------------------------------------
+    //
+    // Si la hoja se encuentra rechazada, ejecutamos Submit
+    // para enviarla nuevamente a aprobación.
+    //
+    if (currentStatus === "Status: Rejected") {
+      await this.submitButton.waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      await this.submitButton.click();
+
+      // Esperamos explícitamente la transición:
+      // Rejected → Submitted.
+      await this.getTimesheetStatus("Submitted").waitFor({
+        state: "visible",
+        timeout: 15000,
+      });
+
+      currentStatus = "Status: Submitted";
+    }
+
+    // -------------------------------------------------------------------------
+    // VALIDACIÓN FINAL
+    // -------------------------------------------------------------------------
+    //
+    // Confirmamos que la hoja quedó realmente en Submitted
+    // antes de continuar con el flujo de aprobación.
+    //
+    if (currentStatus !== "Status: Submitted") {
+      throw new Error(
+        `No fue posible preparar la Timesheet para aprobación. Estado actual: ${currentStatus}`,
+      );
+    }
   }
 
   // ===========================================================================
@@ -392,6 +491,42 @@ export class TimesheetPage {
    */
   async submitTimesheet(): Promise<void> {
     await this.submitButton.click();
+  }
+
+  /**
+   * Registra un comentario en el campo Timesheet Action.
+   *
+   * Este comentario queda asociado a la acción posteriormente
+   * ejecutada sobre la hoja de tiempo, por ejemplo Approve o Reject.
+   */
+  async enterTimesheetActionComment(comment: string): Promise<void> {
+    // Localizamos el campo de texto utilizado para registrar
+    // observaciones asociadas a las acciones de la Timesheet.
+    const actionComment = this.page.getByPlaceholder("Type here ...");
+
+    // Registramos el comentario recibido como dato de prueba.
+    await actionComment.fill(comment);
+  }
+
+  /**
+   * Aprueba la hoja de tiempo actualmente enviada.
+   */
+  async approveTimesheet(): Promise<void> {
+    // Localizamos el botón Approve disponible cuando
+    // la Timesheet se encuentra en estado Submitted.
+    const approveButton = this.page.getByRole("button", {
+      name: "Approve",
+      exact: true,
+    });
+
+    // Esperamos a que la acción de aprobación esté disponible.
+    await approveButton.waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
+
+    // Ejecutamos la aprobación de la hoja de tiempo.
+    await approveButton.click();
   }
 
   /**
@@ -555,5 +690,26 @@ export class TimesheetPage {
     return this.page.getByText(`Status: ${status}`, {
       exact: true,
     });
+  }
+
+  getTimesheetHistoryAction(action: string): Locator {
+    // OrangeHRM puede conservar varias acciones iguales en el historial
+    // debido a ejecuciones anteriores de la misma Timesheet.
+    // Tomamos una coincidencia visible para comprobar que la acción
+    // se encuentra registrada en el historial.
+    return this.page
+      .getByText(action, {
+        exact: true,
+      })
+      .first();
+  }
+
+  /**
+   * Retorna el botón Edit de la hoja de tiempo.
+   * Permite validar si la Timesheet puede o no ser modificada
+   * según su estado actual.
+   */
+  getEditButton(): Locator {
+    return this.editButton;
   }
 }
