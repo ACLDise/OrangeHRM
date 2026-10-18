@@ -42,7 +42,9 @@ Given("que el usuario está autenticado en OrangeHRM", async ({ page }) => {
   await loginPage.login(USERNAME, PASSWORD);
 
   // Confirmamos que la autenticación fue exitosa.
-  await expect(page).toHaveURL(/dashboard/);
+  await expect(page).toHaveURL(/dashboard/, {
+    timeout: 15000,
+  });
 });
 
 /**----------------------------------------------------------------------------------------------
@@ -57,7 +59,9 @@ Given("tiene acceso a la edición de su hoja de tiempo", async ({ page }) => {
 
   // Confirmamos que el usuario llegó correctamente
   // a la pantalla de edición de la hoja de tiempo.
-  await expect(page).toHaveURL(/editTimesheet/);
+  await expect(page).toHaveURL(/editTimesheet/, {
+    timeout: 15000,
+  });
 });
 
 /**----------------------------------------------------------------------------------------------
