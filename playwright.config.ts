@@ -61,7 +61,10 @@ export default defineConfig({
     {
       ...defineBddProject({
         name: "bdd",
-        features: "features/HU-TIM-001/*.feature",
+        features: [
+          "features/HU-TIM-001/*.feature",
+          "features/HU-DASH-001/*.feature",
+        ],
         steps: "features/steps/*.ts",
       }),
       use: { ...devices["Desktop Chrome"] },
