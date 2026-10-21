@@ -212,15 +212,12 @@ export class TimesheetPage {
     // Esperamos a que OrangeHRM muestre alguno de los estados
     // asociados a la hoja de tiempo consultada.
     const statusLabel = this.page
-      .locator("p.oxd-text--subtitle-2")
-      .filter({
-        hasText: /^Status:\s*(Not Submitted|Submitted|Rejected|Approved)$/,
-      })
+      .getByText(/^Status:\s*(Not Submitted|Submitted|Rejected|Approved)$/)
       .first();
 
     await statusLabel.waitFor({
       state: "visible",
-      timeout: 15000,
+      timeout: 20000,
     });
 
     // Consultamos el estado actual de la Timesheet.

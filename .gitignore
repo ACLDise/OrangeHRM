@@ -1,9 +1,14 @@
-
-# Playwright
 node_modules/
+<<<<<<< HEAD
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
 /.features-gen/
+=======
+.env
+.run/
+reports/
+*.log
+>>>>>>> c209f15 (Casos Admin)
