@@ -1,36 +1,30 @@
 {
   "name": "automatizacion-orangehrm-bdd",
   "version": "1.0.0",
-<<<<<<< HEAD
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Suite de automatización de pruebas para OrangeHRM con Playwright, TypeScript, BDD, Gherkin y Page Object Model",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "playwright test",
     "test:chromium": "playwright test --project=chromium",
     "bdd:generate": "bddgen",
     "test:bdd": "bddgen && playwright test --project=bdd",
-    "report": "playwright show-report"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ACLDise/OrangeHRM.git"
-=======
-  "private": true,
-  "description": "Automatización web OrangeHRM (Job Titles) con Playwright + Cucumber (BDD) + Screenplay + POM + Excel",
-  "engines": {
-    "node": ">=20"
->>>>>>> c209f15 (Casos Admin)
-  },
-  "scripts": {
+    "report": "playwright show-report",
     "plantilla": "ts-node scripts/create-template.ts",
     "prepare-data": "ts-node scripts/prepare-data.ts",
     "listar": "ts-node scripts/list-cases.ts",
     "dryrun": "cucumber-js --profile dryrun",
-    "test": "cucumber-js --profile default",
-    "test:headed": "cucumber-js --profile headed",
-    "report": "ts-node scripts/report.ts",
+    "test:admin": "cucumber-js --profile default",
+    "test:admin:headed": "cucumber-js --profile headed",
+    "report:admin": "ts-node scripts/report.ts",
     "abrir": "ts-node scripts/open-last.ts",
     "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ACLDise/OrangeHRM.git"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.3.0",
@@ -39,6 +33,7 @@
     "dotenv": "^18.0.8",
     "exceljs": "^4.4.0",
     "playwright": "^1.64.1",
+    "playwright-bdd": "^9.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
